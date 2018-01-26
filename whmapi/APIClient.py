@@ -1,12 +1,14 @@
-import urlparse
-import urllib2
+try:
+    from urlparse import urljoin
+    from urllib2 import build_opener
+except ImportError:
+    from urllib.parse import urljoin
+    from urllib.request import build_opener
 import json
-
-
 class APIClient(object):
     """WHM API client class"""
     def __init__(self,
-                 host_uri='https://127.0.0.1:2087/',
+                 host_uri='https://127.0.0.1:2087',
                  api_user='root',
                  api_type='json-api',
                  api_version=1,
@@ -42,7 +44,7 @@ class APIClient(object):
             fc=function,
             av=self.api_version,
             pm=params)
-        constrcuted = urlparse.urljoin(self.host_uri, url_path)
+        constrcuted = urljoin(self.host_uri, url_path)
         # Dirty hack to prevent few if's
         # This allows us to ignore case when paramse were empty.
         return constrcuted.rstrip('&')
@@ -57,7 +59,7 @@ class APIClient(object):
 
     def _get_opener(self):
         """Retrieve URLOpenerDirector object with required headers"""
-        opener = urllib2.build_opener()
+        opener = build_opener()
         opener.addheaders = self._auth_headers()
         return opener
 
@@ -65,4 +67,4 @@ class APIClient(object):
         """ Generate API call with specified params for specified function """
         uri = self.get_url_for(function, req_params)
         result = self.opener.open(uri)
-        return json.loads(result)
+        return json.loads(result.read().decode('utf-8'))
